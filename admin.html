@@ -301,18 +301,18 @@ function checkPwd() {
 }
 
 /* ─── DATOS DEL TORNEO ─── */
-const PLAYERS = ['Seba','Pancho','Baby','Belén','Ronald','Miguel','Nico','Vicho','Gaby'];
+const PLAYERS = ['Seba','Pancho','Baby','Belén','Ronald','Miguel','Nico','Vicho','Gaby','Liza'];
 
 const ROUNDS = [
-  { n:1, bye:'Seba',   matches:[{id:'r1m1',a:'Pancho',b:'Gaby'  },{id:'r1m2',a:'Baby',  b:'Vicho' },{id:'r1m3',a:'Belén', b:'Nico'  },{id:'r1m4',a:'Ronald',b:'Miguel'}]},
-  { n:2, bye:'Pancho', matches:[{id:'r2m1',a:'Baby',  b:'Seba'  },{id:'r2m2',a:'Belén', b:'Gaby'  },{id:'r2m3',a:'Ronald',b:'Vicho' },{id:'r2m4',a:'Miguel',b:'Nico'  }]},
-  { n:3, bye:'Baby',   matches:[{id:'r3m1',a:'Belén', b:'Pancho'},{id:'r3m2',a:'Ronald',b:'Seba'  },{id:'r3m3',a:'Miguel',b:'Gaby'  },{id:'r3m4',a:'Nico',  b:'Vicho' }]},
-  { n:4, bye:'Belén',  matches:[{id:'r4m1',a:'Ronald',b:'Baby'  },{id:'r4m2',a:'Miguel',b:'Pancho'},{id:'r4m3',a:'Nico',  b:'Seba'  },{id:'r4m4',a:'Vicho', b:'Gaby'  }]},
-  { n:5, bye:'Ronald', matches:[{id:'r5m1',a:'Miguel',b:'Belén' },{id:'r5m2',a:'Nico',  b:'Baby'  },{id:'r5m3',a:'Vicho', b:'Pancho'},{id:'r5m4',a:'Gaby',  b:'Seba'  }]},
-  { n:6, bye:'Miguel', matches:[{id:'r6m1',a:'Nico',  b:'Ronald'},{id:'r6m2',a:'Vicho', b:'Belén' },{id:'r6m3',a:'Gaby',  b:'Baby'  },{id:'r6m4',a:'Seba',  b:'Pancho'}]},
-  { n:7, bye:'Nico',   matches:[{id:'r7m1',a:'Vicho', b:'Miguel'},{id:'r7m2',a:'Gaby',  b:'Ronald'},{id:'r7m3',a:'Seba',  b:'Belén' },{id:'r7m4',a:'Pancho',b:'Baby'  }]},
-  { n:8, bye:'Vicho',  matches:[{id:'r8m1',a:'Gaby',  b:'Nico'  },{id:'r8m2',a:'Seba',  b:'Miguel'},{id:'r8m3',a:'Pancho',b:'Ronald'},{id:'r8m4',a:'Baby',  b:'Belén' }]},
-  { n:9, bye:'Gaby',   matches:[{id:'r9m1',a:'Seba',  b:'Vicho' },{id:'r9m2',a:'Pancho',b:'Nico'  },{id:'r9m3',a:'Baby',  b:'Miguel'},{id:'r9m4',a:'Belén', b:'Ronald'}]},
+  { n:1, matches:[{id:'r1m1',a:'Seba',  b:'Liza'  },{id:'r1m2',a:'Pancho',b:'Gaby'  },{id:'r1m3',a:'Baby',  b:'Vicho' },{id:'r1m4',a:'Belén', b:'Nico'  },{id:'r1m5',a:'Ronald',b:'Miguel'}]},
+  { n:2, matches:[{id:'r2m1',a:'Seba',  b:'Baby'  },{id:'r2m2',a:'Pancho',b:'Liza'  },{id:'r2m3',a:'Belén', b:'Gaby'  },{id:'r2m4',a:'Ronald',b:'Vicho' },{id:'r2m5',a:'Miguel',b:'Nico'  }]},
+  { n:3, matches:[{id:'r3m1',a:'Seba',  b:'Ronald'},{id:'r3m2',a:'Pancho',b:'Belén' },{id:'r3m3',a:'Baby',  b:'Liza'  },{id:'r3m4',a:'Miguel',b:'Gaby'  },{id:'r3m5',a:'Nico',  b:'Vicho' }]},
+  { n:4, matches:[{id:'r4m1',a:'Seba',  b:'Nico'  },{id:'r4m2',a:'Pancho',b:'Miguel'},{id:'r4m3',a:'Baby',  b:'Ronald'},{id:'r4m4',a:'Belén', b:'Liza'  },{id:'r4m5',a:'Gaby',  b:'Vicho' }]},
+  { n:5, matches:[{id:'r5m1',a:'Seba',  b:'Gaby'  },{id:'r5m2',a:'Pancho',b:'Vicho' },{id:'r5m3',a:'Baby',  b:'Nico'  },{id:'r5m4',a:'Belén', b:'Miguel'},{id:'r5m5',a:'Ronald',b:'Liza'  }]},
+  { n:6, matches:[{id:'r6m1',a:'Seba',  b:'Pancho'},{id:'r6m2',a:'Baby',  b:'Gaby'  },{id:'r6m3',a:'Belén', b:'Vicho' },{id:'r6m4',a:'Ronald',b:'Nico'  },{id:'r6m5',a:'Miguel',b:'Liza'  }]},
+  { n:7, matches:[{id:'r7m1',a:'Seba',  b:'Belén' },{id:'r7m2',a:'Pancho',b:'Baby'  },{id:'r7m3',a:'Ronald',b:'Gaby'  },{id:'r7m4',a:'Miguel',b:'Vicho' },{id:'r7m5',a:'Nico',  b:'Liza'  }]},
+  { n:8, matches:[{id:'r8m1',a:'Seba',  b:'Miguel'},{id:'r8m2',a:'Pancho',b:'Ronald'},{id:'r8m3',a:'Baby',  b:'Belén' },{id:'r8m4',a:'Nico',  b:'Gaby'  },{id:'r8m5',a:'Vicho', b:'Liza'  }]},
+  { n:9, matches:[{id:'r9m1',a:'Seba',  b:'Vicho' },{id:'r9m2',a:'Pancho',b:'Nico'  },{id:'r9m3',a:'Baby',  b:'Miguel'},{id:'r9m4',a:'Belén', b:'Ronald'},{id:'r9m5',a:'Gaby',  b:'Liza'  }]},
 ];
 
 const PLAYOFF_MATCHES = [
