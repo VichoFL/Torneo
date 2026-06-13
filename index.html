@@ -821,7 +821,7 @@
       <div class="bracket" id="br-sf2"></div>
     </div>
   </div>
-  <p class="sec-label">Definiciones · Mejor de 3</p>
+  <p class="sec-label">Definiciones</p>
   <div class="po-bracket-flow">
     <div class="po-stage">
       <div class="po-stage-head">
@@ -1140,7 +1140,7 @@ function renderPlayoffs(sorted, scores) {
   drawBracket('br-sf1', p1, sf1b, sf1r, 1, sf1bSeed, 1);
   drawBracket('br-sf2', p2, sf2b, sf2r, 2, sf2bSeed, 1);
   drawBracket('br-final', finA, finB, finR, null, null, 3);
-  drawBracket('br-third', thrA, thrB, matchResult(scores.third, 3), null, null, 3);
+  drawBracket('br-third', thrA, thrB, matchResult(scores.third, 1), null, null, 1);
   renderChampion(finR, finA, finB);
 }
 
