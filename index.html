@@ -1125,6 +1125,8 @@ function renderPlayoffs(sorted, scores) {
   const qf2r = matchResult(scores.qf2, 5);
   const sf1b = qf2r?.done ? (qf2r.winner==='a' ? p4 : p5) : 'Gan. QF2';
   const sf2b = qf1r?.done ? (qf1r.winner==='a' ? p3 : p6) : 'Gan. QF1';
+  const sf1bSeed = qf2r?.done ? (qf2r.winner==='a' ? 4 : 5) : null;
+  const sf2bSeed = qf1r?.done ? (qf1r.winner==='a' ? 3 : 6) : null;
   const sf1r = matchResult(scores.sf1, 5);
   const sf2r = matchResult(scores.sf2, 5);
   const finA = sf1r?.done ? (sf1r.winner==='a' ? p1   : sf1b) : 'Gan. SF1';
@@ -1134,8 +1136,8 @@ function renderPlayoffs(sorted, scores) {
   const finR = matchResult(scores.final, 5);
   drawBracket('br-qf1', p3, p6, qf1r, 3, 6);
   drawBracket('br-qf2', p4, p5, qf2r, 4, 5);
-  drawBracket('br-sf1', p1, sf1b, sf1r, 1, null);
-  drawBracket('br-sf2', p2, sf2b, sf2r, 2, null);
+  drawBracket('br-sf1', p1, sf1b, sf1r, 1, sf1bSeed);
+  drawBracket('br-sf2', p2, sf2b, sf2r, 2, sf2bSeed);
   drawBracket('br-final', finA, finB, finR);
   drawBracket('br-third', thrA, thrB, matchResult(scores.third, 5));
   renderChampion(finR, finA, finB);
