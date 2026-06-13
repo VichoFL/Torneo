@@ -787,7 +787,7 @@
 <!-- ═══ TAB PLAYOFFS ═══ -->
 <div id="tab-playoffs" class="tab-panel">
   <div id="champion-area"></div>
-  <p class="sec-label">Cuartos de Final · Best of 5</p>
+  <p class="sec-label">Cuartos de Final · Set único a 21</p>
   <div class="po-bracket-flow">
     <div class="po-stage">
       <div class="po-stage-head">
@@ -804,7 +804,7 @@
       <div class="bracket" id="br-qf2"></div>
     </div>
   </div>
-  <p class="sec-label">Semifinales · Best of 5</p>
+  <p class="sec-label">Semifinales · Set único a 21</p>
   <div class="po-bracket-flow">
     <div class="po-stage">
       <div class="po-stage-head">
@@ -821,7 +821,7 @@
       <div class="bracket" id="br-sf2"></div>
     </div>
   </div>
-  <p class="sec-label">Definiciones · Best of 5</p>
+  <p class="sec-label">Definiciones · Mejor de 3</p>
   <div class="po-bracket-flow">
     <div class="po-stage">
       <div class="po-stage-head">
@@ -1093,17 +1093,19 @@ function renderFixture(scores) {
 }
 
 /* ─── RENDER PLAYOFFS ─── */
-function drawBracket(elId, pA, pB, result, seedA, seedB) {
+function drawBracket(elId, pA, pB, result, seedA, seedB, bo=3) {
   const el = document.getElementById(elId); if (!el) return;
   const aW=result?.winner==='a', bW=result?.winner==='b';
   const tbdA=!pA||/^[1-6]/.test(pA)||pA.startsWith('Gan.')||pA.startsWith('Per.');
   const tbdB=!pB||/^[1-6]/.test(pB)||pB.startsWith('Gan.')||pB.startsWith('Per.');
+  const scA = bo===1 ? result?.pA : result?.sA;
+  const scB = bo===1 ? result?.pB : result?.sB;
   const row=(name,score,won,seed,tbd)=>`<div class="bracket-row ${won?'won':''} ${tbd?'tbd':''}">
     <span class="br-seed">${seed!=null?seed:'?'}</span>
     <span class="br-name">${!tbd?`<span class="mini-avatar">${initials(name)}</span>`:''}<span class="name-text">${name||'—'}</span></span>
     ${result?.done?`<span class="br-score">${score}</span>`:''}
   </div>`;
-  el.innerHTML = row(pA,result?.sA,aW,seedA,tbdA)+row(pB,result?.sB,bW,seedB,tbdB);
+  el.innerHTML = row(pA,scA,aW,seedA,tbdA)+row(pB,scB,bW,seedB,tbdB);
 }
 
 function renderChampion(finalResult, finA, finB) {
@@ -1120,25 +1122,25 @@ function renderPlayoffs(sorted, scores) {
   const n = (i, fb) => sorted[i]?.p || fb;
   const p1=n(0,'1°'), p2=n(1,'2°'), p3=n(2,'3°');
   const p4=n(3,'4°'), p5=n(4,'5°'), p6=n(5,'6°');
-  const qf1r = matchResult(scores.qf1, 5);
-  const qf2r = matchResult(scores.qf2, 5);
+  const qf1r = matchResult(scores.qf1, 1);
+  const qf2r = matchResult(scores.qf2, 1);
   const sf1b = qf2r?.done ? (qf2r.winner==='a' ? p4 : p5) : 'Gan. QF2';
   const sf2b = qf1r?.done ? (qf1r.winner==='a' ? p3 : p6) : 'Gan. QF1';
   const sf1bSeed = qf2r?.done ? (qf2r.winner==='a' ? 4 : 5) : null;
   const sf2bSeed = qf1r?.done ? (qf1r.winner==='a' ? 3 : 6) : null;
-  const sf1r = matchResult(scores.sf1, 5);
-  const sf2r = matchResult(scores.sf2, 5);
+  const sf1r = matchResult(scores.sf1, 1);
+  const sf2r = matchResult(scores.sf2, 1);
   const finA = sf1r?.done ? (sf1r.winner==='a' ? p1   : sf1b) : 'Gan. SF1';
   const finB = sf2r?.done ? (sf2r.winner==='a' ? p2   : sf2b) : 'Gan. SF2';
   const thrA = sf1r?.done ? (sf1r.winner==='a' ? sf1b : p1  ) : 'Per. SF1';
   const thrB = sf2r?.done ? (sf2r.winner==='a' ? sf2b : p2  ) : 'Per. SF2';
-  const finR = matchResult(scores.final, 5);
-  drawBracket('br-qf1', p3, p6, qf1r, 3, 6);
-  drawBracket('br-qf2', p4, p5, qf2r, 4, 5);
-  drawBracket('br-sf1', p1, sf1b, sf1r, 1, sf1bSeed);
-  drawBracket('br-sf2', p2, sf2b, sf2r, 2, sf2bSeed);
-  drawBracket('br-final', finA, finB, finR);
-  drawBracket('br-third', thrA, thrB, matchResult(scores.third, 5));
+  const finR = matchResult(scores.final, 3);
+  drawBracket('br-qf1', p3, p6, qf1r, 3, 6, 1);
+  drawBracket('br-qf2', p4, p5, qf2r, 4, 5, 1);
+  drawBracket('br-sf1', p1, sf1b, sf1r, 1, sf1bSeed, 1);
+  drawBracket('br-sf2', p2, sf2b, sf2r, 2, sf2bSeed, 1);
+  drawBracket('br-final', finA, finB, finR, null, null, 3);
+  drawBracket('br-third', thrA, thrB, matchResult(scores.third, 3), null, null, 3);
   renderChampion(finR, finA, finB);
 }
 
