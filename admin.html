@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Torneo Ping Pong</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:        #1d4ed8;
+      --blue-mid:    #3b82f6;
+      --blue-light:  #dbeafe;
+      --green:       #15803d;
+      --green-light: #dcfce7;
+      --red:         #dc2626;
+      --amber-light: #fef3c7;
+      --bg:          #f1f5f9;
+      --card:        #ffffff;
+      --border:      #e2e8f0;
+      --text:        #1e293b;
+      --muted:       #64748b;
+      --faint:       #f8fafc;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      background: var(--bg); color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── AUTH OVERLAY ── */
+    #auth-overlay {
+      position: fixed; inset: 0; z-index: 999;
+      background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .auth-box {
+      background: #fff; border-radius: 16px;
+      padding: 2rem 1.75rem; width: 100%; max-width: 360px;
+      text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,.4);
+    }
+    .auth-box h1 { font-size: 1.375rem; font-weight: 800; margin-bottom: .25rem; }
+    .auth-box p  { font-size: .875rem; color: var(--muted); margin-bottom: 1.25rem; }
+    .auth-box input {
+      width: 100%; padding: .75rem 1rem; font-size: 1rem;
+      border: 2px solid var(--border); border-radius: 10px;
+      outline: none; margin-bottom: .75rem;
+      transition: border-color .15s;
+    }
+    .auth-box input:focus { border-color: var(--blue); }
+    .auth-box button {
+      width: 100%; padding: .75rem; font-size: .9375rem;
+      font-weight: 700; color: #fff;
+      background: var(--blue); border: none; border-radius: 10px;
+      cursor: pointer; transition: background .15s;
+    }
+    .auth-box button:hover { background: #1e40af; }
+    .auth-err { font-size: .8125rem; color: var(--red); margin-top: .625rem; min-height: 1.2em; }
+
+    /* ── ADMIN HEADER ── */
+    .adm-header {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-mid) 100%);
+      color: #fff; padding: 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .adm-header h1 { font-size: 1.125rem; font-weight: 800; }
+    .adm-header a {
+      font-size: .8125rem; color: rgba(255,255,255,.85);
+      text-decoration: none; font-weight: 600;
+    }
+    .adm-header a:hover { color: #fff; }
+
+    /* ── LAYOUT ── */
+    .adm-body { max-width: 900px; margin: 0 auto; padding: 1rem; }
+
+    @media (min-width: 700px) {
+      .adm-grid { display: grid; grid-template-columns: 220px 1fr; gap: 1rem; align-items: start; }
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card); border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      margin-bottom: .875rem; overflow: hidden;
+    }
+    .card-head {
+      padding: .6875rem 1rem; background: var(--faint);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: .875rem; font-weight: 700;
+    }
+
+    /* ── STANDINGS MINI ── */
+    .standings-mini { position: sticky; top: 1rem; }
+    table.mini-tbl {
+      width: 100%; border-collapse: collapse; font-size: .8125rem;
+    }
+    .mini-tbl th {
+      padding: .375rem .625rem; font-size: .625rem; font-weight: 700;
+      color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
+      background: var(--faint); border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+    .mini-tbl th.left { text-align: left; }
+    .mini-tbl td { padding: .4375rem .625rem; text-align: center; border-top: 1px solid #f8fafc; }
+    .mini-tbl td.left { text-align: left; }
+    .mini-tbl tr.playoff { background: var(--blue-light); }
+    .mini-tbl tr.cutoff  { box-shadow: inset 0 -2px 0 var(--blue); }
+
+    .rank {
+      width: 18px; height: 18px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: .5625rem; font-weight: 800;
+      background: var(--border); color: var(--muted);
+      flex-shrink: 0; vertical-align: middle; margin-right: .25rem;
+    }
+    .rank-1{background:#f59e0b;color:#fff}
+    .rank-2{background:#94a3b8;color:#fff}
+    .rank-3{background:#b45309;color:#fff}
+    .rank-4{background:var(--blue);color:#fff}
+
+    /* ── BADGE ── */
+    .badge {
+      font-size: .5625rem; font-weight: 700;
+      padding: .125rem .4375rem; border-radius: 99px;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .badge-pending { background: var(--amber-light); color: #92400e; }
+    .badge-ok      { background: var(--green-light);  color: #14532d; }
+
+    /* ── MATCH FORM ── */
+    .match-form {
+      padding: .875rem 1rem; border-top: 1px solid #f8fafc;
+    }
+    .match-form:first-of-type { border-top: none; }
+    .match-form-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: .625rem;
+    }
+    .match-names {
+      font-size: .875rem; font-weight: 700;
+    }
+    .match-names .sep { color: var(--muted); font-weight: 400; margin: 0 .375rem; }
+
+    .sets-grid { display: flex; flex-direction: column; gap: .375rem; margin-bottom: .625rem; }
+    .set-row {
+      display: flex; align-items: center; gap: .375rem;
+    }
+    .set-label {
+      font-size: .6875rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .05em;
+      width: 40px; flex-shrink: 0;
+    }
+    .set-row input[type=number] {
+      width: 54px; padding: .4375rem .5rem; font-size: .9375rem; font-weight: 700;
+      text-align: center; border: 2px solid var(--border); border-radius: 8px;
+      outline: none; transition: border-color .15s; -moz-appearance: textfield;
+    }
+    .set-row input[type=number]::-webkit-inner-spin-button,
+    .set-row input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .set-row input:focus { border-color: var(--blue); }
+    .set-row input.filled { border-color: #c7d2fe; background: #eef2ff; }
+    .set-dash { font-size: .875rem; color: var(--muted); font-weight: 700; }
+    .set-row .set-note { font-size: .625rem; color: var(--muted); margin-left: .25rem; }
+
+    .btn-save {
+      display: block; width: 100%; padding: .5rem; font-size: .875rem;
+      font-weight: 700; color: #fff; background: var(--blue);
+      border: none; border-radius: 8px; cursor: pointer; transition: background .15s;
+    }
+    .btn-save:hover { background: #1e40af; }
+    .btn-save:active { background: #1e3a8a; }
+    .save-msg {
+      text-align: center; font-size: .75rem; margin-top: .375rem;
+      min-height: 1.1em; color: var(--green); font-weight: 600;
+    }
+
+    /* Round header */
+    .round-head {
+      padding: .75rem 1rem; background: var(--faint);
+      border-bottom: 1px solid var(--border);
+      font-size: .875rem; font-weight: 700; color: var(--text);
+    }
+
+    /* ── PLAYOFF FORM ── */
+    .po-match-label {
+      font-size: .75rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em;
+      margin: 1rem 0 .5rem;
+    }
+    .po-players {
+      font-size: .8125rem; color: var(--muted); margin-bottom: .5rem;
+    }
+    .po-sets-grid { display: flex; flex-wrap: wrap; gap: .375rem; margin-bottom: .625rem; }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-size: .9375rem; font-weight: 800; color: var(--text);
+      margin: 1.5rem 0 .75rem;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    /* ── FOOTER ── */
+    .adm-footer { text-align: center; padding: 2rem 1rem 1rem; font-size: .75rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<!-- ───────────────────────── AUTH OVERLAY ───────────────────────── -->
+<div id="auth-overlay">
+  <div class="auth-box">
+    <h1>Administrador</h1>
+    <p>Torneo Ping Pong Familiar</p>
+    <input type="password" id="pwd-input" placeholder="Contraseña"
+           onkeydown="if(event.key==='Enter')checkPwd()">
+    <button onclick="checkPwd()">Ingresar</button>
+    <p class="auth-err" id="auth-err"></p>
+  </div>
+</div>
+
+<!-- ───────────────────────── ADMIN CONTENT ───────────────────────── -->
+<div id="admin-content" style="display:none">
+
+  <header class="adm-header">
+    <h1>Admin — Torneo Ping Pong</h1>
+    <a href="index.html" target="_blank">Ver tabla pública ↗</a>
+  </header>
+
+  <div class="adm-body">
+    <div class="adm-grid">
+
+      <!-- SIDEBAR: mini standings -->
+      <aside class="standings-mini">
+        <div class="card">
+          <div class="card-head">Posiciones</div>
+          <table class="mini-tbl">
+            <thead>
+              <tr>
+                <th class="left" colspan="2">Jugador</th>
+                <th>G</th><th>P</th><th>Pts</th>
+              </tr>
+            </thead>
+            <tbody id="admin-standings"></tbody>
+          </table>
+        </div>
+      </aside>
+
+      <!-- MAIN: forms -->
+      <main>
+        <p class="section-title">Fase 1 — Liga</p>
+        <div id="league-forms"></div>
+
+        <p class="section-title">Fase 2 — Playoffs</p>
+        <div id="playoff-forms"></div>
+      </main>
+
+    </div>
+  </div>
+
+  <footer class="adm-footer">Admin — Torneo Familiar 2025</footer>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     FIREBASE SDK
+     ═══════════════════════════════════════════════════════ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   CONTRASEÑA DEL ADMIN — CÁMBIALA POR LA QUE QUIERAS
+   ══════════════════════════════════════════════════════════ */
+const ADMIN_PASSWORD = 'pong2025';
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyAAdfgRnfuMhPVQyoz8x6erXn4l9vEQtXg",
+  authDomain:        "miniproyecto-900a6.firebaseapp.com",
+  databaseURL:       "https://miniproyecto-900a6-default-rtdb.firebaseio.com",
+  projectId:         "miniproyecto-900a6",
+  storageBucket:     "miniproyecto-900a6.firebasestorage.app",
+  messagingSenderId: "928428422741",
+  appId:             "1:928428422741:web:21b184684b923f865446dc"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ─── AUTH ─── */
+function checkPwd() {
+  const val = document.getElementById('pwd-input').value;
+  if (val === ADMIN_PASSWORD) {
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('admin-content').style.display = 'block';
+    initAdmin();
+  } else {
+    document.getElementById('auth-err').textContent = 'Contraseña incorrecta';
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd-input').focus();
+  }
+}
+
+/* ─── DATOS DEL TORNEO ─── */
+const PLAYERS = ['Seba','Pancho','Baby','Belén','Ronald','Miguel','Nico','Vicho'];
+
+const ROUNDS = [
+  { n:1, matches:[
+    {id:'r1m1', a:'Seba',   b:'Vicho' },
+    {id:'r1m2', a:'Pancho', b:'Nico'  },
+    {id:'r1m3', a:'Baby',   b:'Miguel'},
+    {id:'r1m4', a:'Belén',  b:'Ronald'},
+  ]},
+  { n:2, matches:[
+    {id:'r2m1', a:'Seba',   b:'Nico'  },
+    {id:'r2m2', a:'Pancho', b:'Miguel'},
+    {id:'r2m3', a:'Baby',   b:'Ronald'},
+    {id:'r2m4', a:'Belén',  b:'Vicho' },
+  ]},
+  { n:3, matches:[
+    {id:'r3m1', a:'Seba',   b:'Miguel'},
+    {id:'r3m2', a:'Pancho', b:'Ronald'},
+    {id:'r3m3', a:'Baby',   b:'Belén' },
+    {id:'r3m4', a:'Nico',   b:'Vicho' },
+  ]},
+  { n:4, matches:[
+    {id:'r4m1', a:'Seba',   b:'Ronald'},
+    {id:'r4m2', a:'Pancho', b:'Belén' },
+    {id:'r4m3', a:'Miguel', b:'Nico'  },
+    {id:'r4m4', a:'Baby',   b:'Vicho' },
+  ]},
+  { n:5, matches:[
+    {id:'r5m1', a:'Seba',   b:'Ronald'},
+    {id:'r5m2', a:'Belén',  b:'Miguel'},
+    {id:'r5m3', a:'Pancho', b:'Baby'  },
+    {id:'r5m4', a:'Nico',   b:'Vicho' },
+  ]},
+  { n:6, matches:[
+    {id:'r6m1', a:'Seba',   b:'Baby'  },
+    {id:'r6m2', a:'Ronald', b:'Belén' },
+    {id:'r6m3', a:'Miguel', b:'Vicho' },
+    {id:'r6m4', a:'Pancho', b:'Nico'  },
+  ]},
+  { n:7, matches:[
+    {id:'r7m1', a:'Seba',   b:'Pancho'},
+    {id:'r7m2', a:'Baby',   b:'Ronald'},
+    {id:'r7m3', a:'Belén',  b:'Nico'  },
+    {id:'r7m4', a:'Miguel', b:'Vicho' },
+  ]},
+];
+
+const PLAYOFF_MATCHES = [
+  { id:'sf1',   label:'Semifinal 1',    bo:5 },
+  { id:'sf2',   label:'Semifinal 2',    bo:5 },
+  { id:'final', label:'Final',          bo:5 },
+  { id:'third', label:'3er y 4to Puesto', bo:5 },
+];
+
+/* ─── LÓGICA ─── */
+function matchResult(score, bestOf) {
+  if (!score) return null;
+  const need = Math.ceil(bestOf / 2);
+  let sA=0, sB=0, pA=0, pB=0;
+  for (let i=1; i<=bestOf; i++) {
+    if (sA>=need || sB>=need) break;
+    const a=score[`s${i}a`], b=score[`s${i}b`];
+    if (a==null || a==='' || b==null || b==='') break;
+    const na=+a, nb=+b;
+    pA+=na; pB+=nb;
+    if (na>nb) sA++; else if (nb>na) sB++;
+  }
+  const done=sA>=need||sB>=need;
+  return {sA,sB,pA,pB,done,winner:done?(sA>=need?'a':'b'):null};
+}
+
+function h2h(p1,p2,scores) {
+  for (const {matches} of ROUNDS) {
+    for (const m of matches) {
+      if (m.a===p1&&m.b===p2){const r=matchResult(scores[m.id],3);return r?.done?(r.winner==='a'?1:-1):0;}
+      if (m.a===p2&&m.b===p1){const r=matchResult(scores[m.id],3);return r?.done?(r.winner==='b'?1:-1):0;}
+    }
+  }
+  return 0;
+}
+
+function computeStandings(scores) {
+  const S={};
+  PLAYERS.forEach(p=>S[p]={p,pts:0,pj:0,pg:0,pp:0,sw:0,sl:0,pw:0,pl:0});
+  for (const {matches} of ROUNDS) {
+    for (const m of matches) {
+      const r=matchResult(scores[m.id],3);
+      if (!r?.done) continue;
+      const a=S[m.a],b=S[m.b];
+      a.pj++;b.pj++;
+      a.sw+=r.sA;a.sl+=r.sB;b.sw+=r.sB;b.sl+=r.sA;
+      a.pw+=r.pA;a.pl+=r.pB;b.pw+=r.pB;b.pl+=r.pA;
+      if(r.winner==='a'){a.pg++;a.pts+=3;b.pp++;}
+      else              {b.pg++;b.pts+=3;a.pp++;}
+    }
+  }
+  return Object.values(S).sort((a,b)=>{
+    if(b.pts!==a.pts) return b.pts-a.pts;
+    const sd=(a.sw-a.sl)-(b.sw-b.sl); if(sd!==0) return -sd;
+    const pd=(a.pw-a.pl)-(b.pw-b.pl); if(pd!==0) return -pd;
+    return -h2h(a.p,b.p,scores);
+  });
+}
+
+/* ─── GENERATE LEAGUE FORMS ─── */
+function buildLeagueForms() {
+  const container = document.getElementById('league-forms');
+  container.innerHTML = ROUNDS.map(round => {
+    const matchForms = round.matches.map(m => `
+      <div class="match-form" id="form-${m.id}">
+        <div class="match-form-head">
+          <span class="match-names">
+            ${m.a}<span class="sep">vs</span>${m.b}
+          </span>
+          <span class="badge badge-pending" id="badge-${m.id}">Pendiente</span>
+        </div>
+        <div class="sets-grid">
+          ${[1,2,3].map(i=>`
+          <div class="set-row">
+            <span class="set-label">Set ${i}</span>
+            <input type="number" id="${m.id}-s${i}a" min="0" max="30"
+                   placeholder="${m.a.split(' ')[0]}"
+                   oninput="onScoreInput('${m.id}',3)">
+            <span class="set-dash">—</span>
+            <input type="number" id="${m.id}-s${i}b" min="0" max="30"
+                   placeholder="${m.b.split(' ')[0]}"
+                   oninput="onScoreInput('${m.id}',3)">
+            ${i===3?'<span class="set-note">(si hay)</span>':''}
+          </div>`).join('')}
+        </div>
+        <button class="btn-save" onclick="saveMatch('${m.id}',3)">Guardar</button>
+        <p class="save-msg" id="msg-${m.id}"></p>
+      </div>
+    `).join('');
+
+    return `<div class="card">
+      <div class="round-head">Ronda ${round.n}</div>
+      ${matchForms}
+    </div>`;
+  }).join('');
+}
+
+/* ─── GENERATE PLAYOFF FORMS ─── */
+function buildPlayoffForms(sorted) {
+  const t=sorted;
+  const n=(i,fb)=>t[i]?.p||fb;
+  const sf1a=n(0,'1°'), sf1b=n(3,'4°');
+  const sf2a=n(1,'2°'), sf2b=n(2,'3°');
+
+  // Determine finalists from scores (we'll refresh this on each scores update)
+  const poPlayers = {
+    sf1:   [sf1a, sf1b],
+    sf2:   [sf2a, sf2b],
+    final: ['Gan. SF1', 'Gan. SF2'],
+    third: ['Per. SF1', 'Per. SF2'],
+  };
+
+  document.getElementById('playoff-forms').innerHTML = PLAYOFF_MATCHES.map(po => {
+    const [pa, pb] = poPlayers[po.id];
+    const sets = Array.from({length: po.bo}, (_,i)=>i+1);
+    const inputs = sets.map(i=>`
+      <div class="set-row">
+        <span class="set-label">Set ${i}</span>
+        <input type="number" id="${po.id}-s${i}a" min="0" max="30"
+               placeholder="${pa}" oninput="onScoreInput('${po.id}',${po.bo})">
+        <span class="set-dash">—</span>
+        <input type="number" id="${po.id}-s${i}b" min="0" max="30"
+               placeholder="${pb}" oninput="onScoreInput('${po.id}',${po.bo})">
+      </div>`).join('');
+
+    return `<div class="card">
+      <div class="card-head">
+        <span>${po.label}</span>
+        <span class="badge badge-pending" id="badge-${po.id}">Pendiente</span>
+      </div>
+      <div class="match-form">
+        <p class="po-players" id="players-${po.id}">${pa} <strong>vs</strong> ${pb}</p>
+        <div class="sets-grid">${inputs}</div>
+        <button class="btn-save" onclick="saveMatch('${po.id}',${po.bo})">Guardar</button>
+        <p class="save-msg" id="msg-${po.id}"></p>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── SCORE INPUT HANDLER ─── */
+function onScoreInput(matchId, bestOf) {
+  const need = Math.ceil(bestOf / 2);
+  let sA=0, sB=0;
+  for (let i=1; i<=bestOf; i++) {
+    if (sA>=need || sB>=need) break;
+    const ea=document.getElementById(`${matchId}-s${i}a`);
+    const eb=document.getElementById(`${matchId}-s${i}b`);
+    if (!ea||!eb) break;
+    const va=ea.value, vb=eb.value;
+    if (va!=='') ea.classList.add('filled'); else ea.classList.remove('filled');
+    if (vb!=='') eb.classList.add('filled'); else eb.classList.remove('filled');
+    if (va===''||vb==='') break;
+    if (+va>+vb) sA++; else if (+vb>+va) sB++;
+  }
+}
+
+/* ─── SAVE MATCH ─── */
+function saveMatch(id, bestOf) {
+  const data = {};
+  let hasAny = false;
+  for (let i=1; i<=bestOf; i++) {
+    const ea=document.getElementById(`${id}-s${i}a`);
+    const eb=document.getElementById(`${id}-s${i}b`);
+    if (!ea||!eb) continue;
+    const va=ea.value, vb=eb.value;
+    if (va!==''||vb!=='') {
+      data[`s${i}a`]=va===''?0:parseInt(va);
+      data[`s${i}b`]=vb===''?0:parseInt(vb);
+      hasAny=true;
+    }
+  }
+
+  const msgEl=document.getElementById(`msg-${id}`);
+  if (!hasAny) {
+    db.ref(`scores/${id}`).remove()
+      .then(()=>flash(msgEl,'Borrado.','#64748b'));
+    return;
+  }
+  db.ref(`scores/${id}`).set(data)
+    .then(()=>flash(msgEl,'Guardado!'))
+    .catch(e=>flash(msgEl,'Error: '+e.message,'#dc2626'));
+}
+
+function flash(el, txt, color='#15803d') {
+  el.style.color=color; el.textContent=txt;
+  setTimeout(()=>el.textContent='',2500);
+}
+
+/* ─── LOAD SCORES INTO FORMS ─── */
+function loadToForms(scores) {
+  // League
+  for (const {matches} of ROUNDS) {
+    for (const m of matches) {
+      const sc=scores[m.id]||{};
+      for (let i=1;i<=3;i++) {
+        ['a','b'].forEach(s=>{
+          const el=document.getElementById(`${m.id}-s${i}${s}`);
+          if(el){ el.value=sc[`s${i}${s}`]!=null?sc[`s${i}${s}`]:''; if(el.value!=='')el.classList.add('filled'); else el.classList.remove('filled'); }
+        });
+      }
+      updateBadge(m.id, sc, 3);
+    }
+  }
+  // Playoffs
+  for (const po of PLAYOFF_MATCHES) {
+    const sc=scores[po.id]||{};
+    for (let i=1;i<=po.bo;i++) {
+      ['a','b'].forEach(s=>{
+        const el=document.getElementById(`${po.id}-s${i}${s}`);
+        if(el){ el.value=sc[`s${i}${s}`]!=null?sc[`s${i}${s}`]:''; if(el.value!=='')el.classList.add('filled'); else el.classList.remove('filled'); }
+      });
+    }
+    updateBadge(po.id, sc, po.bo);
+  }
+}
+
+function updateBadge(id, sc, bestOf) {
+  const el=document.getElementById(`badge-${id}`);
+  if(!el) return;
+  const r=matchResult(sc,bestOf);
+  if(r?.done){ el.textContent=`${r.sA}–${r.sB}`; el.className='badge badge-ok'; }
+  else { el.textContent='Pendiente'; el.className='badge badge-pending'; }
+}
+
+/* ─── RENDER MINI STANDINGS ─── */
+function renderMiniStandings(sorted) {
+  const RC=['','rank-1','rank-2','rank-3','rank-4'];
+  document.getElementById('admin-standings').innerHTML = sorted.map((s,i)=>{
+    const pos=i+1, po=pos<=4;
+    return `<tr class="${po?'playoff':''} ${pos===4?'cutoff':''}">
+      <td class="left" colspan="2">
+        <span class="rank ${po?RC[pos]:''}">${pos}</span>${s.p}
+      </td>
+      <td>${s.pg}</td><td>${s.pp}</td><td><strong>${s.pts}</strong></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ─── UPDATE PLAYOFF PLAYER LABELS ─── */
+function updatePlayoffPlayers(sorted, scores) {
+  const t=sorted;
+  const n=(i,fb)=>t[i]?.p||fb;
+  const sf1a=n(0,'1°'), sf1b=n(3,'4°');
+  const sf2a=n(1,'2°'), sf2b=n(2,'3°');
+  const sf1r=matchResult(scores.sf1,5);
+  const sf2r=matchResult(scores.sf2,5);
+  const finA=sf1r?.done?(sf1r.winner==='a'?sf1a:sf1b):'Gan. SF1';
+  const finB=sf2r?.done?(sf2r.winner==='a'?sf2a:sf2b):'Gan. SF2';
+  const thrA=sf1r?.done?(sf1r.winner==='a'?sf1b:sf1a):'Per. SF1';
+  const thrB=sf2r?.done?(sf2r.winner==='a'?sf2b:sf2a):'Per. SF2';
+
+  const set=(id,a,b)=>{
+    const el=document.getElementById(`players-${id}`);
+    if(el) el.innerHTML=`${a} <strong>vs</strong> ${b}`;
+    // update input placeholders
+    for(let i=1;i<=5;i++){
+      const ea=document.getElementById(`${id}-s${i}a`);
+      const eb=document.getElementById(`${id}-s${i}b`);
+      if(ea) ea.placeholder=a; if(eb) eb.placeholder=b;
+    }
+  };
+  set('sf1', sf1a, sf1b);
+  set('sf2', sf2a, sf2b);
+  set('final', finA, finB);
+  set('third', thrA, thrB);
+}
+
+/* ─── INIT ─── */
+let formsBuilt = false;
+
+function initAdmin() {
+  db.ref('scores').on('value', snap => {
+    const scores = snap.val() || {};
+    const sorted  = computeStandings(scores);
+
+    if (!formsBuilt) {
+      buildLeagueForms();
+      buildPlayoffForms(sorted);
+      formsBuilt = true;
+    }
+
+    loadToForms(scores);
+    renderMiniStandings(sorted);
+    updatePlayoffPlayers(sorted, scores);
+  });
+}
+</script>
+</body>
+</html>

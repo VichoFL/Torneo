@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>Torneo Ping Pong Familiar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Superficies oscuras tipo "stadium" */
+      --bg-0:        #06081a;
+      --bg-1:        #0a0f24;
+      --bg-2:        #111634;
+      --surface:     rgba(255,255,255,.04);
+      --surface-2:   rgba(255,255,255,.07);
+      --border:      rgba(255,255,255,.08);
+      --border-strong: rgba(255,255,255,.16);
+
+      /* Texto */
+      --text:        #f5f7ff;
+      --text-soft:   #c7cce0;
+      --muted:       #8a91ad;
+      --faint:       #5a607a;
+
+      /* Acentos ping-pong */
+      --ball:        #ff6b35;   /* naranja pelota */
+      --ball-glow:   #ff8a4d;
+      --table:       #10b981;   /* verde mesa */
+      --table-deep:  #047857;
+      --gold:        #fbbf24;
+      --silver:      #cbd5e1;
+      --bronze:      #d97706;
+      --blue:        #38bdf8;
+      --red:         #ef4444;
+    }
+
+    html, body { background: var(--bg-0); }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 600px at 50% -200px, rgba(255,107,53,.18), transparent 60%),
+        radial-gradient(900px 500px at 100% 10%,  rgba(16,185,129,.12), transparent 60%),
+        radial-gradient(800px 600px at 0% 20%,    rgba(56,189,248,.08), transparent 60%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-0) 60%);
+      background-attachment: fixed;
+      overflow-x: hidden;
+    }
+
+    /* Patrón sutil de "pelotitas" en el fondo */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background-image:
+        radial-gradient(circle at 25% 30%, rgba(255,255,255,.025) 1px, transparent 2px),
+        radial-gradient(circle at 75% 70%, rgba(255,255,255,.025) 1px, transparent 2px);
+      background-size: 60px 60px, 80px 80px;
+      pointer-events: none;
+    }
+
+    /* ───────────────── HEADER ───────────────── */
+    .app-header {
+      position: relative;
+      padding: 1.75rem 1.25rem 2.5rem;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .badge-live {
+      display: inline-flex; align-items: center; gap: .375rem;
+      background: rgba(16,185,129,.13);
+      border: 1px solid rgba(16,185,129,.35);
+      color: #6ee7b7;
+      padding: .3rem .65rem;
+      border-radius: 99px;
+      font-size: .6875rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+    }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1;  transform: scale(1); }
+      50%      { opacity: .4; transform: scale(.85); }
+    }
+
+    .title-wrap {
+      margin-top: 1rem;
+      display: flex; align-items: center; justify-content: center; gap: .9rem;
+    }
+    .paddle-icon {
+      width: 44px; height: 44px;
+      filter: drop-shadow(0 4px 12px rgba(255,107,53,.5));
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(-12deg); }
+      50%      { transform: translateY(-4px) rotate(-8deg); }
+    }
+    .app-header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 8vw, 2.75rem);
+      letter-spacing: .02em;
+      line-height: 1;
+      background: linear-gradient(135deg, #fff 30%, var(--ball-glow));
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .app-header .sub {
+      margin-top: .5rem;
+      font-size: .8125rem;
+      color: var(--text-soft);
+      font-weight: 500;
+    }
+
+    /* Mini stats strip */
+    .stats-strip {
+      margin: 1.5rem auto 0;
+      max-width: 540px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .5rem;
+    }
+    .stat-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: .65rem .5rem;
+      backdrop-filter: blur(10px);
+    }
+    .stat-pill .num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem; line-height: 1;
+      color: #fff;
+    }
+    .stat-pill .lbl {
+      font-size: .625rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-top: .25rem;
+      font-weight: 600;
+    }
+    .stat-pill.accent .num { color: var(--ball-glow); }
+    .stat-pill.table  .num { color: #34d399; }
+
+    /* ───────────────── TABS ───────────────── */
+    .tab-nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(10,15,36,.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: .5rem;
+      display: flex;
+      gap: .375rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .tab-nav button {
+      flex: 1;
+      padding: .7rem .25rem;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: .8125rem;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .2s ease;
+      letter-spacing: .03em;
+      display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    }
+    .tab-nav button .tab-ico {
+      width: 16px; height: 16px;
+      opacity: .65;
+    }
+    .tab-nav button:hover { color: var(--text-soft); }
+    .tab-nav button.active {
+      background: linear-gradient(180deg, rgba(255,107,53,.18), rgba(255,107,53,.06));
+      border-color: rgba(255,107,53,.35);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(255,107,53,.18);
+    }
+    .tab-nav button.active .tab-ico { opacity: 1; color: var(--ball-glow); }
+
+    /* ───────────────── LAYOUT ───────────────── */
+    .tab-panel {
+      display: none;
+      padding: 1.25rem 1rem 4rem;
+      max-width: 720px;
+      margin: 0 auto;
+      animation: fadeIn .35s ease-out;
+    }
+    .tab-panel.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Section labels */
+    .sec-label {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .6875rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      margin: 0 0 .75rem .25rem;
+    }
+    .sec-label::before {
+      content: '';
+      width: 3px; height: 14px;
+      background: linear-gradient(180deg, var(--ball), var(--ball-glow));
+      border-radius: 2px;
+    }
+
+    /* ───────────────── PODIO TOP 3 ───────────────── */
+    .podium {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr 1fr;
+      gap: .5rem;
+      align-items: end;
+      margin-bottom: 1.25rem;
+    }
+    .podium-card {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem .65rem .85rem;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      transition: transform .25s;
+    }
+    .podium-card:hover { transform: translateY(-2px); }
+    .podium-card.p1 {
+      background: linear-gradient(180deg, rgba(251,191,36,.18), rgba(251,191,36,.04));
+      border-color: rgba(251,191,36,.4);
+      box-shadow: 0 8px 24px rgba(251,191,36,.18);
+    }
+    .podium-card.p2 {
+      background: linear-gradient(180deg, rgba(203,213,225,.13), rgba(203,213,225,.03));
+      border-color: rgba(203,213,225,.3);
+    }
+    .podium-card.p3 {
+      background: linear-gradient(180deg, rgba(217,119,6,.15), rgba(217,119,6,.03));
+      border-color: rgba(217,119,6,.32);
+    }
+    .podium-medal {
+      position: absolute;
+      top: -10px; left: 50%; transform: translateX(-50%);
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem; line-height: 1;
+      color: #1a1f3a;
+      font-weight: 900;
+      box-shadow: 0 4px 10px rgba(0,0,0,.4);
+    }
+    .podium-card.p1 .podium-medal { background: linear-gradient(135deg, #fde047, var(--gold)); }
+    .podium-card.p2 .podium-medal { background: linear-gradient(135deg, #f1f5f9, var(--silver)); }
+    .podium-card.p3 .podium-medal { background: linear-gradient(135deg, #fdba74, var(--bronze)); }
+
+    .avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--bg-2), var(--surface-2));
+      border: 1.5px solid var(--border-strong);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.25rem;
+      color: #fff;
+      letter-spacing: .02em;
+      margin-bottom: .35rem;
+    }
+    .podium-card.p1 .avatar { border-color: var(--gold); background: linear-gradient(135deg, #78350f, #1a1f3a); }
+    .podium-card.p2 .avatar { border-color: var(--silver); background: linear-gradient(135deg, #475569, #1a1f3a); }
+    .podium-card.p3 .avatar { border-color: var(--bronze); background: linear-gradient(135deg, #7c2d12, #1a1f3a); }
+
+    .podium-name {
+      font-size: .8125rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .podium-pts {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem; line-height: 1;
+      margin-top: .25rem;
+      color: var(--ball-glow);
+    }
+    .podium-pts span { font-size: .625rem; color: var(--muted); font-family: 'Inter', sans-serif; font-weight: 600; margin-left: .15rem; }
+    .podium-card.p1 .podium-pts { color: var(--gold); }
+
+    /* ───────────────── STANDINGS LIST ───────────────── */
+    .standings-list {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+    .standings-head {
+      display: grid;
+      grid-template-columns: 32px 1fr 36px 36px 44px 50px;
+      gap: .5rem;
+      padding: .65rem .85rem;
+      background: rgba(255,255,255,.03);
+      border-bottom: 1px solid var(--border);
+      font-size: .625rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      font-weight: 700;
+      align-items: center;
+    }
+    .standings-head .left { text-align: left; }
+    .standings-head .cell { text-align: center; }
+
+    .standings-row {
+      display: grid;
+      grid-template-columns: 32px 1fr 36px 36px 44px 50px;
+      gap: .5rem;
+      padding: .75rem .85rem;
+      border-top: 1px solid var(--border);
+      align-items: center;
+      transition: background .2s;
+      position: relative;
+    }
+    .standings-row:first-child { border-top: none; }
+    .standings-row:hover { background: rgba(255,255,255,.025); }
+    .standings-row.playoff { background: linear-gradient(90deg, rgba(255,107,53,.06), transparent); }
+    .standings-row.playoff::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--ball);
+    }
+    .standings-row.cutoff { border-bottom: 1px dashed rgba(255,107,53,.35); }
+
+    .pos {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: 8px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      background: var(--surface-2);
+      color: var(--text-soft);
+    }
+    .standings-row.playoff .pos { background: var(--ball); color: #1a0a04; font-weight: 900; }
+    .pos.gold { background: linear-gradient(135deg, #fde047, var(--gold)); color: #1a0a04; }
+    .pos.silver { background: linear-gradient(135deg, #f1f5f9, var(--silver)); color: #1a0a04; }
+    .pos.bronze { background: linear-gradient(135deg, #fdba74, var(--bronze)); color: #1a0a04; }
+
+    .player-cell {
+      display: flex; align-items: center; gap: .55rem;
+      min-width: 0;
+    }
+    .mini-avatar {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--bg-2), var(--surface-2));
+      border: 1px solid var(--border-strong);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: .85rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .player-name {
+      font-size: .875rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cell-num {
+      text-align: center;
+      font-size: .875rem;
+      font-weight: 600;
+      color: var(--text-soft);
+      font-variant-numeric: tabular-nums;
+    }
+    .cell-num.diff-pos { color: #34d399; }
+    .cell-num.diff-neg { color: #f87171; }
+    .cell-pts {
+      text-align: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.35rem;
+      color: var(--ball-glow);
+      line-height: 1;
+    }
+    .standings-row.playoff .cell-pts { color: #fff; text-shadow: 0 0 12px rgba(255,107,53,.5); }
+
+    .standings-foot {
+      padding: .65rem .85rem;
+      background: rgba(0,0,0,.18);
+      border-top: 1px solid var(--border);
+      font-size: .6875rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .standings-foot strong { color: var(--ball-glow); }
+
+    /* En pantallas pequeñas ocultamos columnas de diferencias */
+    @media (max-width: 420px) {
+      .standings-head { grid-template-columns: 28px 1fr 30px 30px 46px; }
+      .standings-row  { grid-template-columns: 28px 1fr 30px 30px 46px; }
+      .hide-xs { display: none !important; }
+    }
+
+    /* ───────────────── FIXTURE ───────────────── */
+    .round-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: .9rem;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+    .round-head {
+      padding: .85rem 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .75rem;
+      background: rgba(255,255,255,.03);
+      border-bottom: 1px solid var(--border);
+    }
+    .round-title {
+      display: flex; align-items: center; gap: .65rem;
+    }
+    .round-num {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--ball), var(--ball-glow));
+      color: #1a0a04;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(255,107,53,.35);
+    }
+    .round-name {
+      font-size: .875rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .round-progress {
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .progress-bar {
+      width: 60px; height: 5px;
+      background: rgba(255,255,255,.08);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar > span {
+      display: block; height: 100%;
+      background: linear-gradient(90deg, var(--table), #34d399);
+      border-radius: 99px;
+      transition: width .4s ease;
+    }
+    .round-count {
+      font-size: .6875rem;
+      font-weight: 700;
+      color: var(--text-soft);
+      font-variant-numeric: tabular-nums;
+    }
+    .round-count.done { color: #34d399; }
+
+    .match {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: .5rem;
+      padding: .85rem 1rem;
+      border-top: 1px solid var(--border);
+      transition: background .2s;
+    }
+    .match:hover { background: rgba(255,255,255,.02); }
+    .match-player {
+      display: flex; align-items: center; gap: .55rem;
+      min-width: 0;
+    }
+    .match-player.right {
+      flex-direction: row-reverse;
+      text-align: right;
+    }
+    .match-player .name {
+      font-size: .875rem;
+      font-weight: 600;
+      color: var(--text-soft);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .match-player.won .name { color: #fff; font-weight: 700; }
+    .match-player.won .mini-avatar {
+      border-color: var(--table);
+      box-shadow: 0 0 0 2px rgba(16,185,129,.15);
+    }
+    .match-player.lost .name { color: var(--faint); }
+
+    .match-center {
+      display: flex; flex-direction: column; align-items: center;
+      min-width: 92px;
+      padding: .25rem .5rem;
+      border-radius: 10px;
+      background: rgba(0,0,0,.25);
+      border: 1px solid var(--border);
+    }
+    .match-center.pending { background: transparent; border-color: transparent; }
+    .sets-score {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem; line-height: 1;
+      color: #fff;
+      letter-spacing: .02em;
+    }
+    .sets-score .dash {
+      color: var(--ball-glow);
+      margin: 0 .15rem;
+    }
+    .set-detail {
+      font-size: .625rem;
+      color: var(--muted);
+      margin-top: .2rem;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .02em;
+    }
+    .vs-pill {
+      font-size: .6875rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: .15em;
+      padding: .35rem .65rem;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+    }
+
+    /* Badges ronda */
+    .badge {
+      font-size: .625rem; font-weight: 800;
+      padding: .25rem .55rem; border-radius: 99px;
+      text-transform: uppercase; letter-spacing: .08em;
+      display: inline-flex; align-items: center; gap: .3rem;
+      white-space: nowrap;
+    }
+    .badge-pending { background: rgba(148,163,184,.12); color: #cbd5e1; border: 1px solid rgba(148,163,184,.2); }
+    .badge-partial { background: rgba(56,189,248,.12); color: #7dd3fc; border: 1px solid rgba(56,189,248,.25); }
+    .badge-done    { background: rgba(16,185,129,.13); color: #6ee7b7; border: 1px solid rgba(16,185,129,.3); }
+    .badge-done::before { content: '✓'; font-weight: 900; }
+
+    /* ───────────────── PLAYOFFS ───────────────── */
+    .champion-banner {
+      position: relative;
+      margin-bottom: 1.5rem;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(251,191,36,.18), rgba(255,107,53,.1));
+      border: 1.5px solid rgba(251,191,36,.4);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .champion-banner.empty { opacity: .55; }
+    .champion-banner::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(400px 200px at 20% -50%, rgba(251,191,36,.2), transparent),
+        radial-gradient(400px 200px at 80% 150%, rgba(255,107,53,.15), transparent);
+      pointer-events: none;
+    }
+    .trophy-ico {
+      font-size: 2rem;
+      filter: drop-shadow(0 4px 12px rgba(251,191,36,.5));
+      animation: float 3s ease-in-out infinite;
+    }
+    .champ-label {
+      font-size: .65rem;
+      font-weight: 700;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: .5rem;
+    }
+    .champ-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.25rem; line-height: 1;
+      margin-top: .25rem;
+      color: #fff;
+      letter-spacing: .02em;
+      background: linear-gradient(135deg, #fff, var(--gold));
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .po-stage {
+      margin-bottom: 1.25rem;
+    }
+    .po-stage-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: .55rem;
+      padding: 0 .25rem;
+    }
+    .po-stage-label {
+      font-size: .6875rem;
+      font-weight: 800;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+    .po-stage-meta {
+      font-size: .625rem;
+      color: var(--muted);
+      letter-spacing: .08em;
+    }
+
+    .bracket {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+    .bracket-row {
+      display: grid;
+      grid-template-columns: 32px 1fr auto;
+      align-items: center;
+      gap: .65rem;
+      padding: .85rem 1rem;
+      transition: background .2s;
+    }
+    .bracket-row + .bracket-row { border-top: 1px solid var(--border); }
+    .bracket-row.won {
+      background: linear-gradient(90deg, rgba(16,185,129,.12), rgba(16,185,129,.03));
+      box-shadow: inset 3px 0 0 var(--table);
+    }
+    .bracket-row.tbd { opacity: .55; }
+    .bracket-row.tbd .br-name { font-style: italic; }
+    .br-seed {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text-soft);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border);
+    }
+    .bracket-row.won .br-seed { background: var(--table); color: #042f1e; border-color: var(--table); }
+    .br-name {
+      display: flex; align-items: center; gap: .6rem;
+      font-size: .9375rem;
+      font-weight: 600;
+      color: var(--text);
+      min-width: 0;
+    }
+    .bracket-row.won .br-name { color: #fff; font-weight: 700; }
+    .br-name .name-text {
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .br-score {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.65rem; line-height: 1;
+      color: var(--ball-glow);
+    }
+    .bracket-row.won .br-score { color: #fff; text-shadow: 0 0 12px rgba(16,185,129,.5); }
+
+    /* Conector visual entre semis y final */
+    .po-bracket-flow {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    .po-stage.final-stage {
+      position: relative;
+    }
+    .po-stage.final-stage::before {
+      content: '';
+      position: absolute;
+      top: -10px; left: 50%;
+      width: 1px; height: 10px;
+      background: linear-gradient(180deg, transparent, var(--border-strong));
+    }
+
+    /* ───────────────── FOOTER ───────────────── */
+    .app-footer {
+      text-align: center;
+      padding: 2rem 1rem 1.5rem;
+      font-size: .75rem;
+      color: var(--faint);
+      border-top: 1px solid var(--border);
+      margin-top: 1rem;
+    }
+    .app-footer .heart { color: var(--ball); }
+
+    /* Empty states */
+    .empty {
+      padding: 2rem 1rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: .8125rem;
+    }
+
+    /* Mejores transiciones para tap en mobile */
+    button { -webkit-tap-highlight-color: transparent; }
+
+    /* Más respiro en pantallas chicas */
+    @media (max-width: 360px) {
+      .match-center { min-width: 80px; }
+      .sets-score { font-size: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═════════════════ HEADER ═════════════════ -->
+<header class="app-header">
+  <span class="badge-live"><span class="live-dot"></span> En vivo</span>
+
+  <div class="title-wrap">
+    <svg class="paddle-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="26" cy="26" rx="20" ry="20" fill="#dc2626"/>
+      <ellipse cx="26" cy="26" rx="16" ry="16" fill="#ef4444"/>
+      <path d="M40 40 L54 54" stroke="#78350f" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="50" cy="14" r="6" fill="#ff8a4d" stroke="#fff" stroke-width="1.5"/>
+    </svg>
+    <h1>Torneo Familiar</h1>
+  </div>
+  <p class="sub">Ping Pong · Edición 2025</p>
+
+  <div class="stats-strip">
+    <div class="stat-pill"><div class="num" id="stat-rounds">7</div><div class="lbl">Rondas</div></div>
+    <div class="stat-pill accent"><div class="num" id="stat-played">0</div><div class="lbl">Jugados</div></div>
+    <div class="stat-pill table"><div class="num" id="stat-leader">—</div><div class="lbl">Líder</div></div>
+  </div>
+</header>
+
+<!-- ═════════════════ TABS ═════════════════ -->
+<nav class="tab-nav">
+  <button class="active" onclick="switchTab('standings',this)">
+    <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V10M12 20V4M19 20v-6"/></svg>
+    Tabla
+  </button>
+  <button onclick="switchTab('fixture',this)">
+    <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    Fixture
+  </button>
+  <button onclick="switchTab('playoffs',this)">
+    <svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 22V18M14 22V18M6 4h12v5a6 6 0 01-12 0V4z"/></svg>
+    Playoffs
+  </button>
+</nav>
+
+<!-- ═════════════════ TAB STANDINGS ═════════════════ -->
+<div id="tab-standings" class="tab-panel active">
+
+  <p class="sec-label">Top 3 — Podio</p>
+  <div class="podium" id="podium"></div>
+
+  <p class="sec-label">Tabla de Posiciones</p>
+  <div class="standings-list">
+    <div class="standings-head">
+      <span class="cell">#</span>
+      <span class="left">Jugador</span>
+      <span class="cell">PJ</span>
+      <span class="cell">PG</span>
+      <span class="cell hide-xs">+/-</span>
+      <span class="cell">Pts</span>
+    </div>
+    <div id="standings-body"></div>
+    <div class="standings-foot">
+      Top <strong>4</strong> avanzan a playoffs · Desempate: Dif. Sets → Dif. Puntos → H2H
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════ TAB FIXTURE ═════════════════ -->
+<div id="tab-fixture" class="tab-panel">
+  <p class="sec-label">Fase Regular · Best of 3</p>
+  <div id="fixture-container"></div>
+</div>
+
+<!-- ═════════════════ TAB PLAYOFFS ═════════════════ -->
+<div id="tab-playoffs" class="tab-panel">
+  <div id="champion-area"></div>
+
+  <p class="sec-label">Llaves · Best of 5</p>
+
+  <div class="po-bracket-flow">
+    <div class="po-stage">
+      <div class="po-stage-head">
+        <span class="po-stage-label">Semifinal 1</span>
+        <span class="po-stage-meta">1° vs 4°</span>
+      </div>
+      <div class="bracket" id="br-sf1"></div>
+    </div>
+
+    <div class="po-stage">
+      <div class="po-stage-head">
+        <span class="po-stage-label">Semifinal 2</span>
+        <span class="po-stage-meta">2° vs 3°</span>
+      </div>
+      <div class="bracket" id="br-sf2"></div>
+    </div>
+
+    <div class="po-stage final-stage">
+      <div class="po-stage-head">
+        <span class="po-stage-label" style="color: var(--gold);">🏆 Final</span>
+        <span class="po-stage-meta">Por el título</span>
+      </div>
+      <div class="bracket" id="br-final"></div>
+    </div>
+
+    <div class="po-stage">
+      <div class="po-stage-head">
+        <span class="po-stage-label">3er Puesto</span>
+        <span class="po-stage-meta">Bronce</span>
+      </div>
+      <div class="bracket" id="br-third"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="app-footer">
+  Torneo Familiar 2025 · Hecho con <span class="heart">♥</span> en casa
+</footer>
+
+<!-- ═════════════════ FIREBASE SDK ═════════════════ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey:            "AIzaSyAAdfgRnfuMhPVQyoz8x6erXn4l9vEQtXg",
+  authDomain:        "miniproyecto-900a6.firebaseapp.com",
+  databaseURL:       "https://miniproyecto-900a6-default-rtdb.firebaseio.com",
+  projectId:         "miniproyecto-900a6",
+  storageBucket:     "miniproyecto-900a6.firebasestorage.app",
+  messagingSenderId: "928428422741",
+  appId:             "1:928428422741:web:21b184684b923f865446dc"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ─── DATOS DEL TORNEO ─── */
+const PLAYERS = ['Seba','Pancho','Baby','Belén','Ronald','Miguel','Nico','Vicho'];
+
+const ROUNDS = [
+  { n:1, matches:[
+    {id:'r1m1', a:'Seba',   b:'Vicho' },
+    {id:'r1m2', a:'Pancho', b:'Nico'  },
+    {id:'r1m3', a:'Baby',   b:'Miguel'},
+    {id:'r1m4', a:'Belén',  b:'Ronald'},
+  ]},
+  { n:2, matches:[
+    {id:'r2m1', a:'Seba',   b:'Nico'  },
+    {id:'r2m2', a:'Pancho', b:'Miguel'},
+    {id:'r2m3', a:'Baby',   b:'Ronald'},
+    {id:'r2m4', a:'Belén',  b:'Vicho' },
+  ]},
+  { n:3, matches:[
+    {id:'r3m1', a:'Seba',   b:'Miguel'},
+    {id:'r3m2', a:'Pancho', b:'Ronald'},
+    {id:'r3m3', a:'Baby',   b:'Belén' },
+    {id:'r3m4', a:'Nico',   b:'Vicho' },
+  ]},
+  { n:4, matches:[
+    {id:'r4m1', a:'Seba',   b:'Ronald'},
+    {id:'r4m2', a:'Pancho', b:'Belén' },
+    {id:'r4m3', a:'Miguel', b:'Nico'  },
+    {id:'r4m4', a:'Baby',   b:'Vicho' },
+  ]},
+  { n:5, matches:[
+    {id:'r5m1', a:'Seba',   b:'Ronald'},
+    {id:'r5m2', a:'Belén',  b:'Miguel'},
+    {id:'r5m3', a:'Pancho', b:'Baby'  },
+    {id:'r5m4', a:'Nico',   b:'Vicho' },
+  ]},
+  { n:6, matches:[
+    {id:'r6m1', a:'Seba',   b:'Baby'  },
+    {id:'r6m2', a:'Ronald', b:'Belén' },
+    {id:'r6m3', a:'Miguel', b:'Vicho' },
+    {id:'r6m4', a:'Pancho', b:'Nico'  },
+  ]},
+  { n:7, matches:[
+    {id:'r7m1', a:'Seba',   b:'Pancho'},
+    {id:'r7m2', a:'Baby',   b:'Ronald'},
+    {id:'r7m3', a:'Belén',  b:'Nico'  },
+    {id:'r7m4', a:'Miguel', b:'Vicho' },
+  ]},
+];
+
+/* ─── LÓGICA ─── */
+function matchResult(score, bestOf) {
+  if (!score) return null;
+  const need = Math.ceil(bestOf / 2);
+  let sA=0, sB=0, pA=0, pB=0;
+  const details = [];
+  for (let i=1; i<=bestOf; i++) {
+    if (sA>=need || sB>=need) break;
+    const a=score[`s${i}a`], b=score[`s${i}b`];
+    if (a==null || a==='' || b==null || b==='') break;
+    const na=+a, nb=+b;
+    pA+=na; pB+=nb; details.push([na,nb]);
+    if (na>nb) sA++; else if (nb>na) sB++;
+  }
+  const done = sA>=need || sB>=need;
+  return { sA, sB, pA, pB, details, done, winner: done?(sA>=need?'a':'b'):null };
+}
+
+function h2h(p1, p2, scores) {
+  for (const {matches} of ROUNDS) {
+    for (const m of matches) {
+      if (m.a===p1 && m.b===p2) {
+        const r=matchResult(scores[m.id],3);
+        return r?.done ? (r.winner==='a'?1:-1) : 0;
+      }
+      if (m.a===p2 && m.b===p1) {
+        const r=matchResult(scores[m.id],3);
+        return r?.done ? (r.winner==='b'?1:-1) : 0;
+      }
+    }
+  }
+  return 0;
+}
+
+function standings(scores) {
+  const S={};
+  PLAYERS.forEach(p => S[p]={p, pts:0, pj:0, pg:0, pp:0, sw:0, sl:0, pw:0, pl:0});
+  for (const {matches} of ROUNDS) {
+    for (const m of matches) {
+      const r=matchResult(scores[m.id],3);
+      if (!r?.done) continue;
+      const a=S[m.a], b=S[m.b];
+      a.pj++; b.pj++;
+      a.sw+=r.sA; a.sl+=r.sB; b.sw+=r.sB; b.sl+=r.sA;
+      a.pw+=r.pA; a.pl+=r.pB; b.pw+=r.pB; b.pl+=r.pA;
+      if (r.winner==='a'){a.pg++;a.pts+=3;b.pp++;}
+      else               {b.pg++;b.pts+=3;a.pp++;}
+    }
+  }
+  return Object.values(S).sort((a,b)=>{
+    if (b.pts!==a.pts) return b.pts-a.pts;
+    const sd=((a.sw-a.sl)-(b.sw-b.sl)); if (sd!==0) return -sd;
+    const pd=((a.pw-a.pl)-(b.pw-b.pl)); if (pd!==0) return -pd;
+    return -h2h(a.p,b.p,scores);
+  });
+}
+
+/* ─── HELPERS ─── */
+const initials = name => name ? name.charAt(0).toUpperCase() : '?';
+
+function countPlayed(scores) {
+  let c = 0;
+  for (const {matches} of ROUNDS) {
+    for (const m of matches) {
+      if (matchResult(scores[m.id], 3)?.done) c++;
+    }
+  }
+  return c;
+}
+
+/* ─── RENDER HEADER STATS ─── */
+function renderStats(scores, sorted) {
+  document.getElementById('stat-played').textContent = countPlayed(scores);
+  const lead = sorted[0];
+  document.getElementById('stat-leader').textContent = (lead && lead.pj > 0) ? lead.p : '—';
+}
+
+/* ─── RENDER PODIO ─── */
+function renderPodium(sorted) {
+  const top3 = sorted.slice(0, 3);
+  // Orden visual: 2°, 1°, 3°
+  const order = [
+    { d: top3[1], rank: 2, cls: 'p2' },
+    { d: top3[0], rank: 1, cls: 'p1' },
+    { d: top3[2], rank: 3, cls: 'p3' },
+  ];
+  document.getElementById('podium').innerHTML = order.map(({d, rank, cls}) => {
+    if (!d) return `<div class="podium-card ${cls}"><div class="podium-medal">${rank}</div><div class="avatar">?</div><div class="podium-name">—</div><div class="podium-pts">0<span>pts</span></div></div>`;
+    return `<div class="podium-card ${cls}">
+      <div class="podium-medal">${rank}</div>
+      <div class="avatar">${initials(d.p)}</div>
+      <div class="podium-name">${d.p}</div>
+      <div class="podium-pts">${d.pts}<span>pts</span></div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── RENDER STANDINGS ─── */
+function renderStandings(sorted) {
+  const posClass = i => i===0?'gold':i===1?'silver':i===2?'bronze':'';
+  document.getElementById('standings-body').innerHTML = sorted.map((s, i) => {
+    const pos = i + 1;
+    const isPlayoff = pos <= 4;
+    const isCutoff  = pos === 4;
+    const sd = s.sw - s.sl;
+    const sdCls = sd > 0 ? 'diff-pos' : sd < 0 ? 'diff-neg' : '';
+    const sdTxt = sd > 0 ? `+${sd}` : `${sd}`;
+    return `<div class="standings-row ${isPlayoff?'playoff':''} ${isCutoff?'cutoff':''}">
+      <span class="pos ${posClass(i)}">${pos}</span>
+      <div class="player-cell">
+        <span class="mini-avatar">${initials(s.p)}</span>
+        <span class="player-name">${s.p}</span>
+      </div>
+      <span class="cell-num">${s.pj}</span>
+      <span class="cell-num">${s.pg}</span>
+      <span class="cell-num ${sdCls} hide-xs">${sdTxt}</span>
+      <span class="cell-pts">${s.pts}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ─── RENDER FIXTURE ─── */
+function renderFixture(scores) {
+  document.getElementById('fixture-container').innerHTML = ROUNDS.map(round => {
+    const total = round.matches.length;
+    const done  = round.matches.filter(m => matchResult(scores[m.id], 3)?.done).length;
+    const pct   = (done / total) * 100;
+    const allDone = done === total;
+    const bc = allDone ? 'badge-done' : done > 0 ? 'badge-partial' : 'badge-pending';
+    const bt = allDone ? 'Completa' : done > 0 ? `${done}/${total}` : 'Pendiente';
+
+    const rows = round.matches.map(m => {
+      const r = matchResult(scores[m.id], 3);
+
+      if (!r?.done) {
+        return `<div class="match">
+          <div class="match-player">
+            <span class="mini-avatar">${initials(m.a)}</span>
+            <span class="name">${m.a}</span>
+          </div>
+          <div class="match-center pending">
+            <span class="vs-pill">VS</span>
+          </div>
+          <div class="match-player right">
+            <span class="mini-avatar">${initials(m.b)}</span>
+            <span class="name">${m.b}</span>
+          </div>
+        </div>`;
+      }
+
+      const aw = r.winner === 'a';
+      return `<div class="match">
+        <div class="match-player ${aw?'won':'lost'}">
+          <span class="mini-avatar">${initials(m.a)}</span>
+          <span class="name">${m.a}</span>
+        </div>
+        <div class="match-center">
+          <span class="sets-score">${r.sA}<span class="dash">–</span>${r.sB}</span>
+          <span class="set-detail">${r.details.map(([a,b])=>`${a}-${b}`).join(' · ')}</span>
+        </div>
+        <div class="match-player right ${!aw?'won':'lost'}">
+          <span class="mini-avatar">${initials(m.b)}</span>
+          <span class="name">${m.b}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="round-card">
+      <div class="round-head">
+        <div class="round-title">
+          <span class="round-num">${round.n}</span>
+          <span class="round-name">Ronda ${round.n}</span>
+        </div>
+        <div class="round-progress">
+          <div class="progress-bar"><span style="width:${pct}%"></span></div>
+          <span class="badge ${bc}">${bt}</span>
+        </div>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+/* ─── RENDER PLAYOFFS ─── */
+function drawBracket(elId, pA, pB, result, seedA, seedB) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const aW = result?.winner === 'a';
+  const bW = result?.winner === 'b';
+  const tbdA = !pA || /^[1-4]/.test(pA) || pA.includes('nador') || pA.includes('rdedor');
+  const tbdB = !pB || /^[1-4]/.test(pB) || pB.includes('nador') || pB.includes('rdedor');
+  const row = (name, score, won, seed, tbd) => `<div class="bracket-row ${won?'won':''} ${tbd?'tbd':''}">
+    <span class="br-seed">${seed != null ? seed : '?'}</span>
+    <span class="br-name">
+      ${!tbd ? `<span class="mini-avatar">${initials(name)}</span>` : ''}
+      <span class="name-text">${name || '—'}</span>
+    </span>
+    ${result?.done ? `<span class="br-score">${score}</span>` : ''}
+  </div>`;
+  el.innerHTML = row(pA, result?.sA, aW, seedA, tbdA) + row(pB, result?.sB, bW, seedB, tbdB);
+}
+
+function renderChampion(finalResult, finA, finB) {
+  const el = document.getElementById('champion-area');
+  if (!finalResult?.done) {
+    el.innerHTML = `<div class="champion-banner empty">
+      <div class="trophy-ico">🏆</div>
+      <div class="champ-label">Campeón</div>
+      <div class="champ-name">Por definir</div>
+    </div>`;
+    return;
+  }
+  const winner = finalResult.winner === 'a' ? finA : finB;
+  el.innerHTML = `<div class="champion-banner">
+    <div class="trophy-ico">🏆</div>
+    <div class="champ-label">Campeón del Torneo</div>
+    <div class="champ-name">${winner}</div>
+  </div>`;
+}
+
+function renderPlayoffs(sorted, scores) {
+  const t = sorted;
+  const n = (i, fb) => t[i]?.p || fb;
+  const sf1a = n(0, '1°'), sf1b = n(3, '4°');
+  const sf2a = n(1, '2°'), sf2b = n(2, '3°');
+  const sf1r = matchResult(scores.sf1, 5);
+  const sf2r = matchResult(scores.sf2, 5);
+  const finA = sf1r?.done ? (sf1r.winner==='a' ? sf1a : sf1b) : 'Gan. SF1';
+  const finB = sf2r?.done ? (sf2r.winner==='a' ? sf2a : sf2b) : 'Gan. SF2';
+  const thrA = sf1r?.done ? (sf1r.winner==='a' ? sf1b : sf1a) : 'Per. SF1';
+  const thrB = sf2r?.done ? (sf2r.winner==='a' ? sf2b : sf2a) : 'Per. SF2';
+  const finR = matchResult(scores.final, 5);
+  drawBracket('br-sf1',   sf1a, sf1b, sf1r, 1, 4);
+  drawBracket('br-sf2',   sf2a, sf2b, sf2r, 2, 3);
+  drawBracket('br-final', finA, finB, finR);
+  drawBracket('br-third', thrA, thrB, matchResult(scores.third, 5));
+  renderChampion(finR, finA, finB);
+}
+
+/* ─── TAB SWITCHING ─── */
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ─── RENDER INICIAL (sin esperar a Firebase) ─── */
+const _empty = standings({});
+renderPodium(_empty);
+renderStandings(_empty);
+renderFixture({});
+renderPlayoffs(_empty, {});
+renderStats({}, _empty);
+
+/* ─── FIREBASE LISTENER ─── */
+db.ref('scores').on('value', snap => {
+  const scores = snap.val() || {};
+  const sorted = standings(scores);
+  renderPodium(sorted);
+  renderStandings(sorted);
+  renderFixture(scores);
+  renderPlayoffs(sorted, scores);
+  renderStats(scores, sorted);
+});
+</script>
+</body>
+</html>
