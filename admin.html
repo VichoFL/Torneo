@@ -346,8 +346,8 @@ function matchResult(score, bestOf) {
 function h2h(p1,p2,scores) {
   for (const {matches} of ROUNDS) {
     for (const m of matches) {
-      if (m.a===p1&&m.b===p2){const r=matchResult(scores[m.id],3);return r?.done?(r.winner==='a'?1:-1):0;}
-      if (m.a===p2&&m.b===p1){const r=matchResult(scores[m.id],3);return r?.done?(r.winner==='b'?1:-1):0;}
+      if (m.a===p1&&m.b===p2){const r=matchResult(scores[m.id],1);return r?.done?(r.winner==='a'?1:-1):0;}
+      if (m.a===p2&&m.b===p1){const r=matchResult(scores[m.id],1);return r?.done?(r.winner==='b'?1:-1):0;}
     }
   }
   return 0;
@@ -358,7 +358,7 @@ function computeStandings(scores) {
   PLAYERS.forEach(p=>S[p]={p,pts:0,pj:0,pg:0,pp:0,sw:0,sl:0,pw:0,pl:0});
   for (const {matches} of ROUNDS) {
     for (const m of matches) {
-      const r=matchResult(scores[m.id],3);
+      const r=matchResult(scores[m.id],1);
       if (!r?.done) continue;
       const a=S[m.a],b=S[m.b];
       a.pj++;b.pj++;
@@ -389,20 +389,18 @@ function buildLeagueForms() {
           <span class="badge badge-pending" id="badge-${m.id}">Pendiente</span>
         </div>
         <div class="sets-grid">
-          ${[1,2,3].map(i=>`
           <div class="set-row">
-            <span class="set-label">Set ${i}</span>
-            <input type="number" id="${m.id}-s${i}a" min="0" max="30"
+            <span class="set-label">Marcador</span>
+            <input type="number" id="${m.id}-s1a" min="0" max="99"
                    placeholder="${m.a.split(' ')[0]}"
-                   oninput="onScoreInput('${m.id}',3)">
+                   oninput="onScoreInput('${m.id}',1)">
             <span class="set-dash">—</span>
-            <input type="number" id="${m.id}-s${i}b" min="0" max="30"
+            <input type="number" id="${m.id}-s1b" min="0" max="99"
                    placeholder="${m.b.split(' ')[0]}"
-                   oninput="onScoreInput('${m.id}',3)">
-            ${i===3?'<span class="set-note">(si hay)</span>':''}
-          </div>`).join('')}
+                   oninput="onScoreInput('${m.id}',1)">
+          </div>
         </div>
-        <button class="btn-save" onclick="saveMatch('${m.id}',3)">Guardar</button>
+        <button class="btn-save" onclick="saveMatch('${m.id}',1)">Guardar</button>
         <p class="save-msg" id="msg-${m.id}"></p>
       </div>
     `).join('');
@@ -513,13 +511,11 @@ function loadToForms(scores) {
   for (const {matches} of ROUNDS) {
     for (const m of matches) {
       const sc=scores[m.id]||{};
-      for (let i=1;i<=3;i++) {
-        ['a','b'].forEach(s=>{
-          const el=document.getElementById(`${m.id}-s${i}${s}`);
-          if(el){ el.value=sc[`s${i}${s}`]!=null?sc[`s${i}${s}`]:''; if(el.value!=='')el.classList.add('filled'); else el.classList.remove('filled'); }
-        });
-      }
-      updateBadge(m.id, sc, 3);
+      ['a','b'].forEach(s=>{
+        const el=document.getElementById(`${m.id}-s1${s}`);
+        if(el){ el.value=sc[`s1${s}`]!=null?sc[`s1${s}`]:''; if(el.value!=='')el.classList.add('filled'); else el.classList.remove('filled'); }
+      });
+      updateBadge(m.id, sc, 1);
     }
   }
   // Playoffs
@@ -539,8 +535,10 @@ function updateBadge(id, sc, bestOf) {
   const el=document.getElementById(`badge-${id}`);
   if(!el) return;
   const r=matchResult(sc,bestOf);
-  if(r?.done){ el.textContent=`${r.sA}–${r.sB}`; el.className='badge badge-ok'; }
-  else { el.textContent='Pendiente'; el.className='badge badge-pending'; }
+  if(r?.done){
+    el.textContent = bestOf===1 ? `${r.pA}–${r.pB}` : `${r.sA}–${r.sB}`;
+    el.className='badge badge-ok';
+  } else { el.textContent='Pendiente'; el.className='badge badge-pending'; }
 }
 
 /* ─── RENDER MINI STANDINGS ─── */

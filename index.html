@@ -780,7 +780,7 @@
 
 <!-- ═══ TAB FIXTURE ═══ -->
 <div id="tab-fixture" class="tab-panel">
-  <p class="sec-label">Fase Regular · Best of 3</p>
+  <p class="sec-label">Fase Regular · Set único a 21</p>
   <div id="fixture-container"></div>
 </div>
 
@@ -927,8 +927,8 @@ function matchResult(score, bestOf) {
 function h2h(p1, p2, scores) {
   for (const {matches} of ROUNDS) {
     for (const m of matches) {
-      if (m.a===p1&&m.b===p2){ const r=matchResult(scores[m.id],3); return r?.done?(r.winner==='a'?1:-1):0; }
-      if (m.a===p2&&m.b===p1){ const r=matchResult(scores[m.id],3); return r?.done?(r.winner==='b'?1:-1):0; }
+      if (m.a===p1&&m.b===p2){ const r=matchResult(scores[m.id],1); return r?.done?(r.winner==='a'?1:-1):0; }
+      if (m.a===p2&&m.b===p1){ const r=matchResult(scores[m.id],1); return r?.done?(r.winner==='b'?1:-1):0; }
     }
   }
   return 0;
@@ -939,7 +939,7 @@ function standings(scores) {
   PLAYERS.forEach(p => S[p]={p,pts:0,pj:0,pg:0,pp:0,sw:0,sl:0,pw:0,pl:0});
   for (const {matches} of ROUNDS) {
     for (const m of matches) {
-      const r=matchResult(scores[m.id],3);
+      const r=matchResult(scores[m.id],1);
       if (!r?.done) continue;
       const a=S[m.a], b=S[m.b];
       a.pj++; b.pj++;
@@ -962,7 +962,7 @@ function countPlayed(scores) {
   let c=0;
   for (const {matches} of ROUNDS)
     for (const m of matches)
-      if (matchResult(scores[m.id],3)?.done) c++;
+      if (matchResult(scores[m.id],1)?.done) c++;
   return c;
 }
 
@@ -1057,13 +1057,13 @@ function renderStandings(sorted) {
 function renderFixture(scores) {
   document.getElementById('fixture-container').innerHTML = ROUNDS.map(round => {
     const total = round.matches.length;
-    const done  = round.matches.filter(m => matchResult(scores[m.id],3)?.done).length;
+    const done  = round.matches.filter(m => matchResult(scores[m.id],1)?.done).length;
     const pct   = (done/total)*100;
     const allDone = done===total;
     const bc = allDone?'badge-done':done>0?'badge-partial':'badge-pending';
     const bt = allDone?'Completa':done>0?`${done}/${total}`:'Pendiente';
     const rows = round.matches.map(m => {
-      const r = matchResult(scores[m.id],3);
+      const r = matchResult(scores[m.id],1);
       if (!r?.done) return `<div class="match">
         <div class="match-player"><span class="mini-avatar">${initials(m.a)}</span><span class="name">${m.a}</span></div>
         <div class="match-center pending"><span class="vs-pill">VS</span></div>
@@ -1073,8 +1073,7 @@ function renderFixture(scores) {
       return `<div class="match">
         <div class="match-player ${aw?'won':'lost'}"><span class="mini-avatar">${initials(m.a)}</span><span class="name">${m.a}</span></div>
         <div class="match-center">
-          <span class="sets-score">${r.sA}<span class="dash">–</span>${r.sB}</span>
-          <span class="set-detail">${r.details.map(([a,b])=>`${a}-${b}`).join(' · ')}</span>
+          <span class="sets-score">${r.pA}<span class="dash">–</span>${r.pB}</span>
         </div>
         <div class="match-player right ${!aw?'won':'lost'}"><span class="mini-avatar">${initials(m.b)}</span><span class="name">${m.b}</span></div>
       </div>`;
@@ -1155,12 +1154,12 @@ function openPlayerModal(name) {
     for (const {matches} of ROUNDS) {
       for (const m of matches) {
         let r=null, isA=false;
-        if      (m.a===name && m.b===opp) { r=matchResult(lastScores[m.id],3); isA=true;  }
-        else if (m.a===opp  && m.b===name){ r=matchResult(lastScores[m.id],3); isA=false; }
+        if      (m.a===name && m.b===opp) { r=matchResult(lastScores[m.id],1); isA=true;  }
+        else if (m.a===opp  && m.b===name){ r=matchResult(lastScores[m.id],1); isA=false; }
         else continue;
         if (!r?.done) return { opp, win:null, score:null };
         const win = isA ? r.winner==='a' : r.winner==='b';
-        const score = isA ? `${r.sA}-${r.sB}` : `${r.sB}-${r.sA}`;
+        const score = isA ? `${r.pA}-${r.pB}` : `${r.pB}-${r.pA}`;
         return { opp, win, score };
       }
     }
@@ -1171,8 +1170,8 @@ function openPlayerModal(name) {
   for (const round of ROUNDS) {
     for (const m of round.matches) {
       let r=null, opp=null, isA=false;
-      if      (m.a===name){ opp=m.b; r=matchResult(lastScores[m.id],3); isA=true;  }
-      else if (m.b===name){ opp=m.a; r=matchResult(lastScores[m.id],3); isA=false; }
+      if      (m.a===name){ opp=m.b; r=matchResult(lastScores[m.id],1); isA=true;  }
+      else if (m.b===name){ opp=m.a; r=matchResult(lastScores[m.id],1); isA=false; }
       else continue;
       history.push({ round:round.n, opp, r, isA });
     }
@@ -1193,8 +1192,8 @@ function openPlayerModal(name) {
         <div class="stat-box orange"><div class="val">${s.pts}</div><div class="key">Puntos</div></div>
         <div class="stat-box green" ><div class="val">${s.pg}</div><div class="key">Ganados</div></div>
         <div class="stat-box red"   ><div class="val">${s.pp}</div><div class="key">Perdidos</div></div>
-        <div class="stat-box"       ><div class="val">${s.sw}</div><div class="key">Sets G</div></div>
-        <div class="stat-box ${sd>=0?'green':'red'}"><div class="val">${sd>0?'+':''}${sd}</div><div class="key">Dif. Sets</div></div>
+        <div class="stat-box"       ><div class="val">${s.pw}</div><div class="key">Pts F</div></div>
+        <div class="stat-box"       ><div class="val">${s.pl}</div><div class="key">Pts C</div></div>
         <div class="stat-box ${pd>=0?'green':'red'}"><div class="val">${pd>0?'+':''}${pd}</div><div class="key">Dif. Pts</div></div>
       </div>
       <div class="modal-sec">H2H — Cara a cara</div>
@@ -1215,11 +1214,11 @@ function openPlayerModal(name) {
             <span class="history-sets" style="color:var(--muted)">—</span>
             <span class="history-res tbd">—</span></div>`;
           const win = isA ? r.winner==='a' : r.winner==='b';
-          const myS = isA ? r.sA : r.sB, opS = isA ? r.sB : r.sA;
+          const myP = isA ? r.pA : r.pB, opP = isA ? r.pB : r.pA;
           return `<div class="history-row">
             <span class="history-round">R${round}</span>
             <span class="history-opp">vs ${opp}</span>
-            <span class="history-sets">${myS}–${opS}</span>
+            <span class="history-sets">${myP}–${opP}</span>
             <span class="history-res ${win?'win':'loss'}">${win?'G':'P'}</span></div>`;
         }).join('')}
       </div>
