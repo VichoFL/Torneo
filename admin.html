@@ -318,10 +318,12 @@ const ROUNDS = [
 ];
 
 const PLAYOFF_MATCHES = [
-  { id:'sf1',   label:'Semifinal 1',    bo:5 },
-  { id:'sf2',   label:'Semifinal 2',    bo:5 },
-  { id:'final', label:'Final',          bo:5 },
-  { id:'third', label:'3er y 4to Puesto', bo:5 },
+  { id:'qf1',   label:'Cuartos 1 — 3° vs 6°', bo:5 },
+  { id:'qf2',   label:'Cuartos 2 — 4° vs 5°', bo:5 },
+  { id:'sf1',   label:'Semifinal 1',           bo:5 },
+  { id:'sf2',   label:'Semifinal 2',           bo:5 },
+  { id:'final', label:'Final',                 bo:5 },
+  { id:'third', label:'3er y 4to Puesto',      bo:5 },
 ];
 
 /* ─── LÓGICA ─── */
@@ -416,13 +418,14 @@ function buildLeagueForms() {
 function buildPlayoffForms(sorted) {
   const t=sorted;
   const n=(i,fb)=>t[i]?.p||fb;
-  const sf1a=n(0,'1°'), sf1b=n(3,'4°');
-  const sf2a=n(1,'2°'), sf2b=n(2,'3°');
+  const p1=n(0,'1°'), p2=n(1,'2°'), p3=n(2,'3°');
+  const p4=n(3,'4°'), p5=n(4,'5°'), p6=n(5,'6°');
 
-  // Determine finalists from scores (we'll refresh this on each scores update)
   const poPlayers = {
-    sf1:   [sf1a, sf1b],
-    sf2:   [sf2a, sf2b],
+    qf1:   [p3, p6],
+    qf2:   [p4, p5],
+    sf1:   [p1, 'Gan. QF2'],
+    sf2:   [p2, 'Gan. QF1'],
     final: ['Gan. SF1', 'Gan. SF2'],
     third: ['Per. SF1', 'Per. SF2'],
   };
@@ -544,10 +547,10 @@ function updateBadge(id, sc, bestOf) {
 function renderMiniStandings(sorted) {
   const RC=['','rank-1','rank-2','rank-3','rank-4'];
   document.getElementById('admin-standings').innerHTML = sorted.map((s,i)=>{
-    const pos=i+1, po=pos<=4;
-    return `<tr class="${po?'playoff':''} ${pos===4?'cutoff':''}">
+    const pos=i+1, po=pos<=6;
+    return `<tr class="${po?'playoff':''} ${pos===6?'cutoff':''}">
       <td class="left" colspan="2">
-        <span class="rank ${po?RC[pos]:''}">${pos}</span>${s.p}
+        <span class="rank ${po&&pos<=4?RC[pos]:''}">${pos}</span>${s.p}
       </td>
       <td>${s.pg}</td><td>${s.pp}</td><td><strong>${s.pts}</strong></td>
     </tr>`;
@@ -558,27 +561,32 @@ function renderMiniStandings(sorted) {
 function updatePlayoffPlayers(sorted, scores) {
   const t=sorted;
   const n=(i,fb)=>t[i]?.p||fb;
-  const sf1a=n(0,'1°'), sf1b=n(3,'4°');
-  const sf2a=n(1,'2°'), sf2b=n(2,'3°');
+  const p1=n(0,'1°'), p2=n(1,'2°'), p3=n(2,'3°');
+  const p4=n(3,'4°'), p5=n(4,'5°'), p6=n(5,'6°');
+  const qf1r=matchResult(scores.qf1,5);
+  const qf2r=matchResult(scores.qf2,5);
+  const sf1b=qf2r?.done?(qf2r.winner==='a'?p4:p5):'Gan. QF2';
+  const sf2b=qf1r?.done?(qf1r.winner==='a'?p3:p6):'Gan. QF1';
   const sf1r=matchResult(scores.sf1,5);
   const sf2r=matchResult(scores.sf2,5);
-  const finA=sf1r?.done?(sf1r.winner==='a'?sf1a:sf1b):'Gan. SF1';
-  const finB=sf2r?.done?(sf2r.winner==='a'?sf2a:sf2b):'Gan. SF2';
-  const thrA=sf1r?.done?(sf1r.winner==='a'?sf1b:sf1a):'Per. SF1';
-  const thrB=sf2r?.done?(sf2r.winner==='a'?sf2b:sf2a):'Per. SF2';
+  const finA=sf1r?.done?(sf1r.winner==='a'?p1:sf1b):'Gan. SF1';
+  const finB=sf2r?.done?(sf2r.winner==='a'?p2:sf2b):'Gan. SF2';
+  const thrA=sf1r?.done?(sf1r.winner==='a'?sf1b:p1):'Per. SF1';
+  const thrB=sf2r?.done?(sf2r.winner==='a'?sf2b:p2):'Per. SF2';
 
   const set=(id,a,b)=>{
     const el=document.getElementById(`players-${id}`);
     if(el) el.innerHTML=`${a} <strong>vs</strong> ${b}`;
-    // update input placeholders
     for(let i=1;i<=5;i++){
       const ea=document.getElementById(`${id}-s${i}a`);
       const eb=document.getElementById(`${id}-s${i}b`);
       if(ea) ea.placeholder=a; if(eb) eb.placeholder=b;
     }
   };
-  set('sf1', sf1a, sf1b);
-  set('sf2', sf2a, sf2b);
+  set('qf1', p3, p6);
+  set('qf2', p4, p5);
+  set('sf1', p1, sf1b);
+  set('sf2', p2, sf2b);
   set('final', finA, finB);
   set('third', thrA, thrB);
 }
