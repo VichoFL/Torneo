@@ -639,6 +639,73 @@
     .history-res.loss { background: rgba(239,68,68,.15);  color: #f87171; }
     .history-res.tbd  { background: var(--surface-2);     color: var(--muted); }
 
+    /* ── PLAYOFF GATE POPUP ── */
+    .po-gate-overlay {
+      position: fixed; inset: 0; z-index: 150;
+      background: rgba(6,8,26,.88);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .po-gate-overlay.open { opacity: 1; pointer-events: all; }
+    .po-gate-card {
+      background: #111528;
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      padding: 2rem 1.5rem 1.75rem;
+      max-width: 360px; width: 100%;
+      text-align: center;
+      transform: scale(.94) translateY(12px);
+      transition: transform .3s cubic-bezier(.25,1.35,.5,1);
+      box-shadow: 0 32px 64px rgba(0,0,0,.5);
+    }
+    .po-gate-overlay.open .po-gate-card { transform: scale(1) translateY(0); }
+    .po-gate-icon {
+      font-size: 2.75rem;
+      line-height: 1;
+      filter: drop-shadow(0 4px 12px rgba(255,107,53,.4));
+      margin-bottom: .85rem;
+    }
+    .po-gate-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.75rem; letter-spacing: .02em; color: #fff; line-height: 1;
+      margin-bottom: .5rem;
+    }
+    .po-gate-sub {
+      font-size: .875rem; color: var(--text-soft); line-height: 1.5;
+    }
+    .po-gate-sub strong { color: var(--ball-glow); }
+    .po-gate-bar-wrap {
+      margin: 1.25rem 0;
+      background: rgba(255,255,255,.07);
+      border-radius: 99px; height: 7px; overflow: hidden;
+    }
+    .po-gate-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--ball), var(--ball-glow));
+      border-radius: 99px;
+      transition: width .5s ease;
+    }
+    .po-gate-counts {
+      display: flex; justify-content: space-between;
+      font-size: .6875rem; font-weight: 700;
+      color: var(--muted); letter-spacing: .06em;
+      margin-top: .35rem; text-transform: uppercase;
+    }
+    .po-gate-btn {
+      margin-top: 1.25rem;
+      width: 100%; padding: .85rem;
+      background: linear-gradient(135deg, rgba(255,107,53,.18), rgba(255,107,53,.08));
+      border: 1px solid rgba(255,107,53,.35);
+      border-radius: 12px;
+      font-family: inherit; font-size: .9375rem; font-weight: 700;
+      color: #fff; cursor: pointer;
+      transition: background .2s;
+    }
+    .po-gate-btn:hover { background: linear-gradient(135deg, rgba(255,107,53,.28), rgba(255,107,53,.14)); }
+
     button { -webkit-tap-highlight-color: transparent; }
     @media (max-width: 360px) {
       .match-center { min-width: 80px; }
@@ -753,6 +820,23 @@
 </div>
 
 <footer class="app-footer">Torneo Familiar 2026</footer>
+
+<!-- ═══ PLAYOFF GATE ═══ -->
+<div id="po-gate" class="po-gate-overlay" onclick="closePlayoffGate()">
+  <div class="po-gate-card" onclick="event.stopPropagation()">
+    <div class="po-gate-icon">🔒</div>
+    <div class="po-gate-title">Playoffs no disponibles</div>
+    <p class="po-gate-sub" id="po-gate-sub">Aún faltan encuentros de la fase regular.</p>
+    <div class="po-gate-bar-wrap">
+      <div class="po-gate-bar" id="po-gate-bar" style="width:0%"></div>
+    </div>
+    <div class="po-gate-counts">
+      <span id="po-gate-played">0/28 jugados</span>
+      <span id="po-gate-remain">28 restantes</span>
+    </div>
+    <button class="po-gate-btn" onclick="closePlayoffGate()">Volver al torneo</button>
+  </div>
+</div>
 
 <!-- ═══ MODAL JUGADOR ═══ -->
 <div id="player-modal" class="modal-overlay" onclick="closeModal()">
@@ -1112,8 +1196,33 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
+/* ─── PLAYOFF GATE ─── */
+const TOTAL_LEAGUE = 28;
+
+function showPlayoffGate() {
+  const played = countPlayed(lastScores);
+  const remain = TOTAL_LEAGUE - played;
+  const pct    = Math.round((played / TOTAL_LEAGUE) * 100);
+  document.getElementById('po-gate-sub').innerHTML =
+    `Faltan <strong>${remain}</strong> ${remain===1?'encuentro':'encuentros'} de la fase regular para acceder a los playoffs.`;
+  document.getElementById('po-gate-bar').style.width = pct + '%';
+  document.getElementById('po-gate-played').textContent = `${played}/${TOTAL_LEAGUE} jugados`;
+  document.getElementById('po-gate-remain').textContent = `${remain} restante${remain===1?'':'s'}`;
+  document.getElementById('po-gate').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePlayoffGate() {
+  document.getElementById('po-gate').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 /* ─── TAB SWITCHING ─── */
 function switchTab(id, btn) {
+  if (id === 'playoffs' && countPlayed(lastScores) < TOTAL_LEAGUE) {
+    showPlayoffGate();
+    return;
+  }
   document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
